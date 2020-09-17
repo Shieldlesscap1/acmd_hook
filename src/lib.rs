@@ -1,16 +1,18 @@
 #![feature(proc_macro_hygiene)]
 
 use smash::lib::L2CValue;
-use smash::lua2cpp::L2CFighterCommon;
-use smash::lua2cpp::L2CAgentBase;
+use smash::lua2cpp::{L2CAgentBase, L2CFighterBase, L2CFighterCommon};
 use smash::phx::Hash40;
 use parking_lot::RwLock;
 
 type Callback = fn(&mut L2CFighterCommon);
+type WeaponCallback = fn(&mut L2CFighterBase);
 type Predicate = unsafe fn(&mut L2CAgentBase, Hash40) -> bool;
 
 static HOOKS: RwLock<Vec<Callback>> = RwLock::new(Vec::new());
+static WEAPON_HOOKS: RwLock<Vec<WeaponCallback>> = RwLock::new(Vec::new());
 static PREDS: RwLock<Vec<Predicate>> = RwLock::new(Vec::new());
+static WEAPON_PREDS: RwLock<Vec<Predicate>> = RwLock::new(Vec::new());
 
 #[skyline::hook(replace = smash::lua2cpp::L2CFighterCommon_sys_line_system_control_fighter)]
 pub unsafe fn sys_line_system_control_fighter_hook(fighter: &mut L2CFighterCommon) -> L2CValue {
@@ -61,6 +63,14 @@ pub extern "Rust" fn add_acmd_load_hook(hook: Callback, predicate: Predicate) {
     preds.push(predicate);
 }
 
+#[no_mangle]
+pub extern "Rust" fn add_acmd_load_weapon_hook(hook: WeaponCallback, predicate: Predicate) {
+    let mut weapon_hooks = WEAPON_HOOKS.write();
+    let mut weapon_preds = WEAPON_PREDS.write();
+
+    weapon_hooks.push(hook);
+    weapon_preds.push(predicate);
+}
 
 #[no_mangle]
 pub extern "Rust" fn acmd_reset_hooks() {
