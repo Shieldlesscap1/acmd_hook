@@ -57,13 +57,10 @@ pub extern "Rust" fn add_acmd_load_hook(hook: Callback, predicate: Predicate) {
     let mut hooks = HOOKS.write();
     let mut preds = PREDS.write();
 
-    //if !hooks.contains(&hook) {
-        hooks.push(hook);
-    //}
-    //if !preds.contains(&predicate) {
-        preds.push(predicate);
-    //}
+    hooks.push(hook);
+    preds.push(predicate);
 }
+
 
 #[no_mangle]
 pub extern "Rust" fn acmd_reset_hooks() {
